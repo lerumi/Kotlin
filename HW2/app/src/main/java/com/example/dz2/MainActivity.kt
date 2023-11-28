@@ -95,8 +95,13 @@ fun GetImageByApi():GifApi{
 
 @Composable
 fun PaintImage(url:String)
+
 {
-        Box(modifier = Modifier.size(100.dp, 100.dp ))
+    val context = LocalContext.current
+        Box(modifier = Modifier.size(100.dp, 100.dp ).clickable(onClick = {
+            val intent = Intent(context, Pribliz::class.java)
+            intent.putExtra("key", url)
+            context.startActivity(intent)}))
         {
             AsyncImage(model = url, contentDescription = "")
 
@@ -113,7 +118,7 @@ fun PaintImage(url:String)
 fun ConfigChange() {
     val amount_column = listOf("Horizontal" to 4, "Vertical" to 3)
     val configuration = LocalConfiguration.current
-    val count = rememberSaveable { mutableListOf<String>() }
+    var count = rememberSaveable { mutableListOf<String>() }
     when (configuration.orientation) {
         Configuration.ORIENTATION_LANDSCAPE -> {
             B(amount_column[0].second, count)
@@ -126,7 +131,7 @@ fun ConfigChange() {
 }
 suspend fun RepeatLoad(count: MutableList<String>)
 {
-    repeat(20)
+    repeat(5)
     {
         val str = gifApi.getWifuByID((1..15).random())
         count.add(str.images[0])
@@ -137,6 +142,7 @@ fun B(indicator: Int, count: MutableList<String>) {
     var c = 0
     d = (count.size)
     var progress by remember { mutableStateOf("work") }
+    var isReverse by remember { mutableStateOf(0) }
     if(progress=="work" || progress=="load") {
         Column(
             modifier = Modifier
@@ -145,10 +151,14 @@ fun B(indicator: Int, count: MutableList<String>) {
             horizontalAlignment = Alignment.CenterHorizontally
         )
         {
-
+            if(isReverse == 1){
+                count.reverse()
+                isReverse=0
+            }
             while (d >= indicator) {
                 Row {
                     for (i in 0..(indicator - 1)) {
+
                         PaintImage(count[i + c])
                     }
                 }
@@ -164,7 +174,10 @@ fun B(indicator: Int, count: MutableList<String>) {
             }
 
             val scope = rememberCoroutineScope()
-
+            Button(onClick = {isReverse = 1 })
+            {
+                Text(text="reverse")
+            }
             Button(
                 onClick = {
                    scope.launch {
@@ -184,7 +197,10 @@ fun B(indicator: Int, count: MutableList<String>) {
             ) {
                 Text("Запустить", fontSize = 22.sp)
             }
+
+
         }
+
     }
     if(progress=="load")
     {
